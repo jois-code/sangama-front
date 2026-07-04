@@ -13,6 +13,9 @@ Sangama Frontend is a modern React Single-Page Application (SPA) built with Vite
 - **HTTP Client:** Axios
 - **State Management:** React Context API & custom hooks
 - **PDF Viewer:** React-PDF
+- **Drag and Drop:** dnd-kit
+- **Markdown Rendering:** react-markdown
+- **Offline Caching:** idb-keyval
 
 ## Features
 
