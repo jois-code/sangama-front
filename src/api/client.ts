@@ -19,7 +19,3 @@ apiClient.interceptors.request.use(
     return Promise.reject(error);
   }
 );
-
-export const pingBackend = () => {
-  apiClient.get('/health').catch(() => {});
-};

@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { set } from 'idb-keyval';
 import { apiClient } from '../api/client';
+import { pesuApi, getAcademicStatus } from '../api/pesu';
 
 interface User {
   id: number;
@@ -27,6 +28,8 @@ interface AuthContextType {
   updateUser: (u: User) => void;
   isAuthenticated: boolean;
   isLoading: boolean;
+  pesuSyncStatus: string;
+  pesuSyncProgress: number;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -38,6 +41,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return cached ? JSON.parse(cached) : null;
   });
   const [isLoading, setIsLoading] = useState(true);
+  const [pesuSyncStatus, setPesuSyncStatus] = useState<string>('');
+  const [pesuSyncProgress, setPesuSyncProgress] = useState<number>(0);
 
   useEffect(() => {
     if (token) {
@@ -103,6 +108,61 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         localStorage.setItem('my_clubs', JSON.stringify(res.data));
       }).catch(err => console.error("Failed to prefetch memberships", err));
 
+      // Trigger background PESU Sync
+      (async () => {
+        setPesuSyncProgress(10);
+        setPesuSyncStatus('Initializing Sync...');
+        try {
+          // 1. Fetch ISA to get current semester and results
+          setPesuSyncStatus('Fetching Semester Data...');
+          const currentIsa = await pesuApi.getIsa(undefined, undefined, true);
+          let academicStatus = null;
+          
+          if (currentIsa && currentIsa.semesters) {
+             academicStatus = getAcademicStatus(currentIsa, profileRes.data.semester);
+             const requests = currentIsa.semesters
+                 .filter((sem: any) => sem.id !== currentIsa.selected_batch_id)
+                 .map((sem: any) => pesuApi.getIsa(sem.id, sem.section_id, true));
+             
+             await Promise.allSettled(requests);
+          }
+          
+          setPesuSyncProgress(40);
+
+          // 2. Fetch CGPA
+          setPesuSyncStatus('Fetching Overall CGPA...');
+          await pesuApi.getCgpa(true);
+          setPesuSyncProgress(60);
+
+          // If special academic status active, skip timetable & attendance
+          if (academicStatus) {
+             setPesuSyncProgress(100);
+             setPesuSyncStatus('Sync Complete (Relax Mode)!');
+          } else {
+             // 3. Fetch Timetable
+             setPesuSyncStatus('Synchronizing Timetable...');
+             await pesuApi.getTimetable(true);
+             setPesuSyncProgress(80);
+
+             // 4. Fetch Attendance
+             setPesuSyncStatus('Caching Attendance...');
+             await pesuApi.getAttendance(true);
+             setPesuSyncProgress(100);
+             setPesuSyncStatus('Sync Complete!');
+          }
+          
+          setTimeout(() => {
+            setPesuSyncProgress(0);
+          }, 2000);
+        } catch (e) {
+          console.error("Failed PESU background sync", e);
+          setPesuSyncStatus('Sync Failed');
+          setTimeout(() => {
+            setPesuSyncProgress(0);
+          }, 2000);
+        }
+      })();
+
     } catch (error) {
       console.error('Login failed:', error);
       alert('Login failed. Make sure the backend is running and seeded.');
@@ -112,7 +172,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = () => {
     setToken(null);
     setUser(null);
-    localStorage.removeItem('pesu_pwd');
+    localStorage.clear();
+    sessionStorage.clear();
+    import('idb-keyval').then(({ clear }) => clear()).catch(console.error);
   };
 
   const updateUser = React.useCallback((updatedUser: User) => {
@@ -121,7 +183,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   return (
-    <AuthContext.Provider value={{ token, user, login, logout, updateUser, isAuthenticated: !!token, isLoading }}>
+    <AuthContext.Provider value={{ token, user, login, logout, updateUser, isAuthenticated: !!token, isLoading, pesuSyncStatus, pesuSyncProgress }}>
       {children}
     </AuthContext.Provider>
   );

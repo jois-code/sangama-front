@@ -60,7 +60,27 @@ export default function OnboardingWizard() {
     }));
   };
 
-  const nextStep = () => setStep(s => Math.min(s + 1, 7));
+  const nextStep = () => {
+    if (step === 1 && !formData.bio.trim()) {
+      alert('Please fill out your bio before continuing.');
+      return;
+    }
+    if (step === 2 && !formData.email.trim()) {
+      alert('Please provide an email address before continuing.');
+      return;
+    }
+    if (step === 3) {
+      if (!formData.role_preference) {
+        alert('Please select a primary role before continuing.');
+        return;
+      }
+      if (formData.domains.length === 0) {
+        alert('Please select at least one domain of interest before continuing.');
+        return;
+      }
+    }
+    setStep(s => Math.min(s + 1, 7));
+  };
   const prevStep = () => setStep(s => Math.max(s - 1, 1));
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -211,7 +231,7 @@ export default function OnboardingWizard() {
               </div>
 
               <div className="space-y-4">
-                <label className="block text-sm font-bold text-white/80">Bio</label>
+                <label className="block text-sm font-bold text-white/80">Bio <span className="text-red-500">*</span></label>
                 <textarea 
                   value={formData.bio}
                   onChange={e => setFormData(prev => ({...prev, bio: e.target.value}))}
@@ -229,7 +249,7 @@ export default function OnboardingWizard() {
               <div className="space-y-6">
                 <div className="relative">
                   <label className="block text-sm font-bold text-white/80 mb-1.5 flex items-center gap-2">
-                    <Mail className="w-4 h-4" /> Email Address
+                    <Mail className="w-4 h-4" /> Email Address <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="email"
@@ -264,7 +284,7 @@ export default function OnboardingWizard() {
               
               <div className="space-y-8">
                 <div>
-                  <label className="block text-sm font-bold text-white/80 mb-3">Primary Role</label>
+                  <label className="block text-sm font-bold text-white/80 mb-3">Primary Role <span className="text-red-500">*</span></label>
                   <div className="flex flex-wrap gap-2">
                     {ROLE_OPTIONS.map(role => (
                       <button
@@ -279,7 +299,7 @@ export default function OnboardingWizard() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-bold text-white/80 mb-3">Domains of Interest (Multi-select)</label>
+                  <label className="block text-sm font-bold text-white/80 mb-3">Domains of Interest (Multi-select) <span className="text-red-500">*</span></label>
                   <div className="flex flex-wrap gap-2">
                     {DOMAIN_OPTIONS.map(domain => {
                       const isSelected = formData.domains.includes(domain);

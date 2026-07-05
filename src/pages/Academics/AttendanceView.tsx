@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { pesuApi } from '../../api/pesu';
-import { AlertCircle, Loader2 } from 'lucide-react';
+import { pesuApi, getAcademicStatus } from '../../api/pesu';
+import { AlertCircle, Loader2, Sparkles } from 'lucide-react';
+import { useAuth } from '../../hooks/useAuth';
 
 interface AttendanceSubject {
   code: string;
@@ -14,11 +15,21 @@ const AttendanceView = () => {
   const [data, setData] = useState<AttendanceSubject[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [specialStatus, setSpecialStatus] = useState<string | null>(null);
+  const { user, pesuSyncProgress } = useAuth();
 
   const fetchData = async (forceRefresh = false) => {
     setLoading(true);
     setError(null);
     try {
+      const isaResponse = await pesuApi.getIsa().catch(() => null);
+      const status = getAcademicStatus(isaResponse, user?.semester);
+      if (status) {
+        setSpecialStatus(status);
+        setLoading(false);
+        return;
+      }
+
       const response = await pesuApi.getAttendance(forceRefresh);
       // The new pesu_api returns the raw dictionary with 'ATTENDANCE_LIST' or 'STUDENT_SUBJECTS'
       let attendanceList = [];
@@ -54,14 +65,19 @@ const AttendanceView = () => {
   };
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    const isCached = localStorage.getItem('pesu_cache_attendance_{}');
+    if (isCached) {
+      fetchData();
+    } else if (pesuSyncProgress === 0) {
+      fetchData();
+    }
+  }, [pesuSyncProgress]);
 
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-text-muted">
         <Loader2 className="w-10 h-10 animate-spin mb-4 text-primary" />
-        <p>Fetching live data...</p>
+        <p>{pesuSyncProgress > 0 ? 'Background Sync in Progress...' : 'Fetching live data...'}</p>
       </div>
     );
   }
@@ -74,6 +90,16 @@ const AttendanceView = () => {
           <h3 className="font-semibold text-lg mb-1">Data Error</h3>
           <p className="text-sm">{error}</p>
         </div>
+      </div>
+    );
+  }
+
+  if (specialStatus) {
+    return (
+      <div className="bg-surface border border-border rounded-2xl p-20 flex flex-col items-center justify-center text-center">
+        <Sparkles className="w-16 h-16 mb-6 opacity-50 text-purple-400" />
+        <h2 className="text-2xl font-mono uppercase tracking-widest text-purple-300 mb-2">System Status</h2>
+        <p className="text-xl text-text-muted">{specialStatus}</p>
       </div>
     );
   }
