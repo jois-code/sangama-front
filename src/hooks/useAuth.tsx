@@ -129,9 +129,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           
           setPesuSyncProgress(40);
 
-          // 2. Fetch CGPA
-          setPesuSyncStatus('Fetching Overall CGPA...');
-          await pesuApi.getCgpa(true);
+          // 2. Fetch ESA & CGPA
+          setPesuSyncStatus('Fetching Overall Results...');
+          await pesuApi.getEsa(true);
           setPesuSyncProgress(60);
 
           // If special academic status active, skip timetable & attendance

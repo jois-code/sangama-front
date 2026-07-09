@@ -35,7 +35,7 @@ const ResultsView = () => {
     try {
       const [isaResponse, cgpaResponse] = await Promise.all([
         pesuApi.getIsa(batchId, sectionId, forceRefresh),
-        pesuApi.getCgpa(forceRefresh).catch(() => null)
+        pesuApi.getEsa(forceRefresh).catch(() => null)
       ]);
 
       if (!isaResponse.success) {
@@ -82,7 +82,22 @@ const ResultsView = () => {
     }
     const isCachedIsa = localStorage.getItem('pesu_cache_isa_{}');
     const isCachedCgpa = localStorage.getItem('pesu_cache_cgpa_{}');
-    if (isCachedIsa && isCachedCgpa) {
+    
+    let isCorrupted = false;
+    if (isCachedIsa) {
+      try {
+        const parsed = JSON.parse(isCachedIsa);
+        isCorrupted = parsed.semesters?.some((s: any) => {
+          const match = s.name.match(/\d+/);
+          return match && parseInt(match[0]) > 10;
+        });
+      } catch (e) {}
+    }
+
+    if (isCorrupted) {
+      localStorage.removeItem('pesu_cache_isa_{}');
+      fetchData(true);
+    } else if (isCachedIsa && isCachedCgpa) {
       fetchData();
     } else if (pesuSyncProgress === 0) {
       fetchData();

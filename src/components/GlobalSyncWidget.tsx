@@ -8,7 +8,7 @@ export const GlobalSyncWidget = () => {
   if (pesuSyncProgress === 0) return null;
 
   return (
-    <div className="fixed bottom-6 right-6 z-[100] animate-in fade-in slide-in-from-bottom-4 duration-500 pointer-events-none">
+    <div className="fixed bottom-24 md:bottom-6 right-4 md:right-6 left-4 md:left-auto z-[100] animate-in fade-in slide-in-from-bottom-4 duration-500 pointer-events-none flex justify-center md:justify-end">
       <div className="bg-surface/80 backdrop-blur-xl border border-white/10 p-5 rounded-2xl shadow-[0_0_40px_rgba(139,92,246,0.15)] flex flex-col gap-3 min-w-[280px]">
         <div className="flex items-center justify-between">
           <span className="text-sm font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary to-purple-400">

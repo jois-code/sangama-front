@@ -82,7 +82,6 @@ export const pesuApi = {
   },
   getEsa: (forceRefresh?: boolean) => fetchFromProxy('esa', {}, forceRefresh),
   getProfile: (forceRefresh?: boolean) => fetchFromProxy('profile', {}, forceRefresh),
-  getCgpa: (forceRefresh?: boolean) => fetchFromProxy('cgpa', {}, forceRefresh),
 };
 
 export const getAcademicStatus = (isaResponse: any, userSemesterStr?: string): string | null => {

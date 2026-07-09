@@ -16,12 +16,17 @@ const AcademicsDashboard = () => {
         const cachedStr = localStorage.getItem(cacheKey);
         if (cachedStr) {
           isaData = JSON.parse(cachedStr);
-        } else {
-          isaData = await pesuApi.getIsa();
+        }
+        
+        if (!isaData) {
+          isaData = await pesuApi.getIsa(undefined, undefined, true);
         }
 
         if (isaData && isaData.semesters) {
-          const maxSem = Math.max(...isaData.semesters.map((s: any) => parseInt(s.id) || 0));
+          const maxSem = Math.max(...isaData.semesters.map((s: any) => {
+            const match = s.name.match(/\d+/);
+            return match ? parseInt(match[0]) : 0;
+          }));
           const hasEsaAnnounced = isaData.actual_sgpa && isaData.actual_sgpa !== 'N/A';
           if (maxSem >= 7 || (maxSem === 6 && hasEsaAnnounced)) {
             setShouldHide(true);
