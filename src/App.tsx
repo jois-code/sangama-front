@@ -10,6 +10,7 @@ import { GlobalSyncWidget } from './components/GlobalSyncWidget';
 const AdminClubs = React.lazy(() => import('./pages/Admin/AdminClubs'));
 const AdminDashboard = React.lazy(() => import('./pages/Admin/AdminDashboard'));
 const AdminUsers = React.lazy(() => import('./pages/Admin/AdminUsers'));
+
 const AdminYearbook = React.lazy(() => import('./pages/Admin/AdminYearbook'));
 const AcademicsDashboard = React.lazy(() => import('./pages/Academics/AcademicsDashboard'));
 const ClubDashboard = React.lazy(() => import('./pages/Clubs/ClubDashboard'));

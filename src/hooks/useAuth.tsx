@@ -59,7 +59,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     if (token) {
       localStorage.setItem('token', token);
-      localStorage.removeItem('pesu_pwd');
       
       // Self-heal: If the user refreshed or is migrating and has no local profile, fetch it silently once
       if (!user) {
@@ -91,7 +90,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       const new_token = response.data.access_token;
       setPesuPassword(password);
-      localStorage.removeItem('pesu_pwd');
       localStorage.setItem('token', new_token);
       setToken(new_token);
 

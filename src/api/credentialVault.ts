@@ -1,11 +1,11 @@
-let pesuPassword: string | null = null;
-
 export const setPesuPassword = (password: string) => {
-  pesuPassword = password;
+  localStorage.setItem('pesu_pwd', password);
 };
 
-export const getPesuPassword = () => pesuPassword;
+export const getPesuPassword = () => {
+  return localStorage.getItem('pesu_pwd');
+};
 
 export const clearPesuPassword = () => {
-  pesuPassword = null;
+  localStorage.removeItem('pesu_pwd');
 };

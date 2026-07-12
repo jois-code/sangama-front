@@ -213,8 +213,8 @@ const YearbookList = () => {
       <header className="border-b border-border bg-surface/50 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl flex-col gap-6 px-5 py-8 md:flex-row md:items-end md:justify-between">
           <div>
-            <Link to="/" className="text-sm font-semibold text-primary hover:text-primary-hover">
-              Sangama
+            <Link to="/" className="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:text-primary-hover mb-2 transition">
+              <ArrowLeft className="h-4 w-4" /> Back to Sangama
             </Link>
             <h1 className="mt-3 text-3xl font-black tracking-tight text-white md:text-4xl">Yearbook</h1>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-text-muted">
