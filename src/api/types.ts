@@ -24,7 +24,9 @@ export interface Event {
   banner_url: string | null;
   club_id: number | null;
   form_id: string | null;
-  form?: any;
+  form?: {
+    closes_at?: string | null;
+  } | null;
 }
 
 
@@ -96,7 +98,7 @@ export interface Course {
 export interface FormAnswer {
   id: string;
   field_id: string;
-  value: any;
+  value: unknown;
 }
 
 export interface FormResponse {
@@ -110,4 +112,34 @@ export interface FormResponse {
   } | null;
   submitted_at: string;
   answers: FormAnswer[];
+}
+
+export interface YearbookUser {
+  id: number;
+  name: string;
+  srn: string;
+  program?: string;
+  branch?: string;
+  semester?: string;
+  campus?: string;
+  photo?: string;
+}
+
+export interface YearbookEntry {
+  id: number;
+  quote: string;
+  display_name_override?: string | null;
+  photo_url?: string | null;
+  linkedin_url?: string | null;
+  github_url?: string | null;
+  instagram_url?: string | null;
+  personal_site_url?: string | null;
+  status: 'pending' | 'approved' | 'rejected';
+  campus?: string | null;
+  graduation_year?: number | null;
+  department?: string | null;
+  created_at?: string;
+  updated_at?: string;
+  approved_at?: string;
+  user: YearbookUser;
 }

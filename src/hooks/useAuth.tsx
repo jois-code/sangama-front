@@ -1,7 +1,9 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { set } from 'idb-keyval';
+import { clear, set } from 'idb-keyval';
 import { apiClient } from '../api/client';
 import { pesuApi, getAcademicStatus } from '../api/pesu';
+import { clearPesuPassword, setPesuPassword } from '../api/credentialVault';
 
 interface User {
   id: number;
@@ -12,6 +14,7 @@ interface User {
   photo?: string;
   semester?: string;
   section?: string;
+  campus?: string;
   program?: string;
   branch?: string;
   bio?: string;
@@ -37,16 +40,26 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
   const [user, setUser] = useState<User | null>(() => {
+    if (!localStorage.getItem('token')) return null;
     const cached = localStorage.getItem('user_profile');
     return cached ? JSON.parse(cached) : null;
   });
-  const [isLoading, setIsLoading] = useState(true);
   const [pesuSyncStatus, setPesuSyncStatus] = useState<string>('');
   const [pesuSyncProgress, setPesuSyncProgress] = useState<number>(0);
+
+  const logout = React.useCallback(() => {
+    setToken(null);
+    setUser(null);
+    clearPesuPassword();
+    localStorage.clear();
+    sessionStorage.clear();
+    clear().catch(console.error);
+  }, []);
 
   useEffect(() => {
     if (token) {
       localStorage.setItem('token', token);
+      localStorage.removeItem('pesu_pwd');
       
       // Self-heal: If the user refreshed or is migrating and has no local profile, fetch it silently once
       if (!user) {
@@ -60,15 +73,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
         });
       }
-      
-      setIsLoading(false);
     } else {
       localStorage.removeItem('token');
       localStorage.removeItem('user_profile');
-      setUser(null);
-      setIsLoading(false);
     }
-  }, [token, user]);
+  }, [token, user, logout]);
 
   const login = async (username: string, password: string) => {
     try {
@@ -81,7 +90,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
       
       const new_token = response.data.access_token;
-      localStorage.setItem('pesu_pwd', password);
+      setPesuPassword(password);
+      localStorage.removeItem('pesu_pwd');
       localStorage.setItem('token', new_token);
       setToken(new_token);
 
@@ -121,8 +131,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           if (currentIsa && currentIsa.semesters) {
              academicStatus = getAcademicStatus(currentIsa, profileRes.data.semester);
              const requests = currentIsa.semesters
-                 .filter((sem: any) => sem.id !== currentIsa.selected_batch_id)
-                 .map((sem: any) => pesuApi.getIsa(sem.id, sem.section_id, true));
+                 .filter((sem) => sem.id !== currentIsa.selected_batch_id)
+                 .map((sem) => pesuApi.getIsa(sem.id, sem.section_id, true));
              
              await Promise.allSettled(requests);
           }
@@ -169,21 +179,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const logout = () => {
-    setToken(null);
-    setUser(null);
-    localStorage.clear();
-    sessionStorage.clear();
-    import('idb-keyval').then(({ clear }) => clear()).catch(console.error);
-  };
-
   const updateUser = React.useCallback((updatedUser: User) => {
     setUser(updatedUser);
     localStorage.setItem('user_profile', JSON.stringify(updatedUser));
   }, []);
 
   return (
-    <AuthContext.Provider value={{ token, user, login, logout, updateUser, isAuthenticated: !!token, isLoading, pesuSyncStatus, pesuSyncProgress }}>
+    <AuthContext.Provider value={{ token, user, login, logout, updateUser, isAuthenticated: !!token, isLoading: false, pesuSyncStatus, pesuSyncProgress }}>
       {children}
     </AuthContext.Provider>
   );

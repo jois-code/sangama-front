@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { Home, Users, Calendar, GraduationCap, FileText, Search, User, LogOut, BookOpen, ShieldAlert, ChevronLeft, ChevronRight, Zap, Briefcase } from 'lucide-react';
+import { Home, Users, GraduationCap, FileText, User, LogOut, BookOpen, ShieldAlert, ChevronLeft, ChevronRight, Zap, Briefcase, Cake } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { useAuth } from '../../hooks/useAuth';
@@ -23,6 +23,8 @@ const navItems: NavItem[] = [
   { to: '/clubs', icon: Users, label: 'Clubs' },
   { to: '/notes', icon: FileText, label: 'Notes' },
   { to: '/discover', icon: Zap, label: 'Discover' },
+  { to: '/yearbook', icon: GraduationCap, label: 'Yearbook' },
+  { to: '/birthday', icon: Cake, label: 'Birthdays' },
   { to: '/my-team', icon: Briefcase, label: 'My Team' },
   { to: '/admin', icon: ShieldAlert, label: 'Admin', adminOnly: true },
 ];

@@ -5,26 +5,42 @@ import NetworkBackground from './components/NetworkBackground';
 import { Layout } from './components/layout/Layout';
 import { ProtectedRoute } from './components/layout/ProtectedRoute';
 import { AuthProvider, useAuth } from './hooks/useAuth';
-import ClubList from './pages/Clubs/ClubList';
-import EventList from './pages/Events/EventList';
-import EventDetail from './pages/Events/EventDetail';
-import NotesDashboard from './pages/Notes/NotesDashboard';
-import CourseDetails from './pages/Notes/CourseDetails';
-import UserProfile from './pages/Profile/UserProfile';
-import AcademicsDashboard from './pages/Academics/AcademicsDashboard';
-import Dashboard from './pages/Home/Dashboard';
-import ComingSoon from './pages/ComingSoon';
-import FormBuilder from './pages/Forms/FormBuilder';
-import FormViewer from './pages/Forms/FormViewer';
-import FormResponses from './pages/Forms/FormResponses';
-import ManageForms from './pages/Clubs/ManageForms';
-import ManageEvents from './pages/Clubs/ManageEvents';
-import OnboardingWizard from './pages/Auth/OnboardingWizard';
-import EditProfile from './pages/Profile/EditProfile';
-import PublicProfile from './pages/Profile/PublicProfile';
-import Discover from './pages/Discover/Discover';
-import MyTeam from './pages/MyTeam/MyTeam';
 import { GlobalSyncWidget } from './components/GlobalSyncWidget';
+
+const AdminClubs = React.lazy(() => import('./pages/Admin/AdminClubs'));
+const AdminDashboard = React.lazy(() => import('./pages/Admin/AdminDashboard'));
+const AdminUsers = React.lazy(() => import('./pages/Admin/AdminUsers'));
+const AdminYearbook = React.lazy(() => import('./pages/Admin/AdminYearbook'));
+const AcademicsDashboard = React.lazy(() => import('./pages/Academics/AcademicsDashboard'));
+const ClubDashboard = React.lazy(() => import('./pages/Clubs/ClubDashboard'));
+const ClubList = React.lazy(() => import('./pages/Clubs/ClubList'));
+const ComingSoon = React.lazy(() => import('./pages/ComingSoon'));
+const CourseDetails = React.lazy(() => import('./pages/Notes/CourseDetails'));
+const Dashboard = React.lazy(() => import('./pages/Home/Dashboard'));
+const Discover = React.lazy(() => import('./pages/Discover/Discover'));
+const EditProfile = React.lazy(() => import('./pages/Profile/EditProfile'));
+const EventDetail = React.lazy(() => import('./pages/Events/EventDetail'));
+const EventList = React.lazy(() => import('./pages/Events/EventList'));
+const FormBuilder = React.lazy(() => import('./pages/Forms/FormBuilder'));
+const FormResponses = React.lazy(() => import('./pages/Forms/FormResponses'));
+const FormViewer = React.lazy(() => import('./pages/Forms/FormViewer'));
+const ManageEvents = React.lazy(() => import('./pages/Clubs/ManageEvents'));
+const ManageForms = React.lazy(() => import('./pages/Clubs/ManageForms'));
+const MyTeam = React.lazy(() => import('./pages/MyTeam/MyTeam'));
+const NotesDashboard = React.lazy(() => import('./pages/Notes/NotesDashboard'));
+const OnboardingWizard = React.lazy(() => import('./pages/Auth/OnboardingWizard'));
+const PublicProfile = React.lazy(() => import('./pages/Profile/PublicProfile'));
+const UserProfile = React.lazy(() => import('./pages/Profile/UserProfile'));
+const YearbookList = React.lazy(() => import('./pages/Yearbook/YearbookList'));
+const YearbookSubmit = React.lazy(() => import('./pages/Yearbook/YearbookSubmit'));
+const BirthdayList = React.lazy(() => import('./pages/Birthdays/BirthdayList'));
+
+const PageLoader = () => (
+  <div className="flex min-h-[50vh] items-center justify-center text-text-muted">
+    <Loader2 className="mr-3 h-5 w-5 animate-spin text-primary" />
+    <span className="text-sm font-medium">Loading...</span>
+  </div>
+);
 
 const Login = () => {
   const { login, isAuthenticated } = useAuth();
@@ -38,7 +54,7 @@ const Login = () => {
     setIsSubmitting(true);
     try {
       await login(username, password);
-    } catch (e) {
+    } catch {
       setIsSubmitting(false);
     }
   };
@@ -121,7 +137,7 @@ const Login = () => {
                   />
                 </div>
                 <p className="text-[10px] text-text-muted/60 mt-3 pl-1 font-medium flex items-start gap-1.5 leading-snug">
-                  <span className="text-primary mt-0.5">*</span> Your passkey is strictly stored locally on your device for proxy authentication.
+                  <span className="text-primary mt-0.5">*</span> Your passkey is kept only for this browser session to fetch live academic data.
                 </p>
               </div>
             </div>
@@ -169,48 +185,49 @@ const Login = () => {
 };
 
 
-import ClubDashboard from './pages/Clubs/ClubDashboard';
-import AdminDashboard from './pages/Admin/AdminDashboard';
-import AdminUsers from './pages/Admin/AdminUsers';
-import AdminClubs from './pages/Admin/AdminClubs';
-
 function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
         <GlobalSyncWidget />
-        <Routes>
-          <Route path="/login" element={<Login />} />
+        <React.Suspense fallback={<PageLoader />}>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/yearbook" element={<YearbookList />} />
 
-          <Route element={<ProtectedRoute />}>
-            <Route path="/onboarding" element={<OnboardingWizard />} />
-            <Route path="/" element={<Layout />}>
-              <Route index element={<Dashboard />} />
-              <Route path="clubs" element={<ClubList />} />
-              <Route path="clubs/:id/dashboard" element={<ClubDashboard />} />
-              <Route path="clubs/:id/forms" element={<ManageForms />} />
-              <Route path="clubs/:id/events" element={<ManageEvents />} />
-              <Route path="events" element={<EventList />} />
-              <Route path="events/:eventId" element={<EventDetail />} />
-              <Route path="capstone/*" element={<ComingSoon />} />
-              <Route path="notes" element={<NotesDashboard />} />
-              <Route path="notes/:courseId" element={<CourseDetails />} />
-              <Route path="search" element={<ComingSoon />} />
-              <Route path="discover" element={<Discover />} />
-              <Route path="my-team" element={<MyTeam />} />
-              <Route path="academics/*" element={<AcademicsDashboard />} />
-              <Route path="profile" element={<UserProfile />} />
-              <Route path="profile/:id" element={<PublicProfile />} />
-              <Route path="profile/edit" element={<EditProfile />} />
-              <Route path="admin" element={<AdminDashboard />} />
-              <Route path="admin/users" element={<AdminUsers />} />
-              <Route path="admin/clubs" element={<AdminClubs />} />
-              <Route path="forms/:formId/builder" element={<FormBuilder />} />
-              <Route path="forms/:formId/view" element={<FormViewer />} />
-              <Route path="forms/:formId/responses" element={<FormResponses />} />
+            <Route element={<ProtectedRoute />}>
+              <Route path="/birthday" element={<BirthdayList />} />
+              <Route path="/onboarding" element={<OnboardingWizard />} />
+              <Route path="/" element={<Layout />}>
+                <Route index element={<Dashboard />} />
+                <Route path="clubs" element={<ClubList />} />
+                <Route path="clubs/:id/dashboard" element={<ClubDashboard />} />
+                <Route path="clubs/:id/forms" element={<ManageForms />} />
+                <Route path="clubs/:id/events" element={<ManageEvents />} />
+                <Route path="events" element={<EventList />} />
+                <Route path="events/:eventId" element={<EventDetail />} />
+                <Route path="capstone/*" element={<ComingSoon />} />
+                <Route path="notes" element={<NotesDashboard />} />
+                <Route path="notes/:courseId" element={<CourseDetails />} />
+                <Route path="search" element={<ComingSoon />} />
+                <Route path="discover" element={<Discover />} />
+                <Route path="my-team" element={<MyTeam />} />
+                <Route path="academics/*" element={<AcademicsDashboard />} />
+                <Route path="profile" element={<UserProfile />} />
+                <Route path="profile/:id" element={<PublicProfile />} />
+                <Route path="profile/edit" element={<EditProfile />} />
+                <Route path="admin" element={<AdminDashboard />} />
+                <Route path="admin/users" element={<AdminUsers />} />
+                <Route path="admin/clubs" element={<AdminClubs />} />
+                <Route path="admin/yearbook" element={<AdminYearbook />} />
+                <Route path="forms/:formId/builder" element={<FormBuilder />} />
+                <Route path="forms/:formId/view" element={<FormViewer />} />
+                <Route path="forms/:formId/responses" element={<FormResponses />} />
+                <Route path="yearbook/submit" element={<YearbookSubmit />} />
+              </Route>
             </Route>
-          </Route>
-        </Routes>
+          </Routes>
+        </React.Suspense>
       </BrowserRouter>
     </AuthProvider>
   );

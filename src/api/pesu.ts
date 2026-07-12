@@ -1,10 +1,38 @@
 import { apiClient } from './client';
+import { getPesuPassword } from './credentialVault';
+
+type PesuPayload = Record<string, number>;
+type PesuProxyResponse = Record<string, unknown> | unknown[];
+
+interface SemesterOption {
+  id: string;
+  section_id: string;
+}
+
+interface IsaComponent {
+  name?: string;
+  marks?: number;
+}
+
+interface IsaMark {
+  actual_grade?: string | null;
+  components?: IsaComponent[];
+}
+
+interface IsaResponse {
+  success: boolean;
+  marks: IsaMark[];
+  actual_sgpa?: string | null;
+  semesters: SemesterOption[];
+  selected_batch_id?: string;
+}
 
 /**
- * Helper function to retrieve the raw PESU password on-the-fly.
+ * Helper function to retrieve the raw PESU password for this browser session.
+ * The password is intentionally kept in memory only, never browser storage.
  */
 const getRawCredentials = () => {
-  const password = localStorage.getItem('pesu_pwd');
+  const password = getPesuPassword();
   if (!password) {
     throw new Error('CREDENTIALS_MISSING');
   }
@@ -12,35 +40,38 @@ const getRawCredentials = () => {
   return { password };
 };
 
-const inflightRequests: Record<string, Promise<any>> = {};
+const inflightRequests: Record<string, Promise<unknown>> = {};
 
 /**
  * Generic wrapper for PESU API requests.
  */
-const fetchFromProxy = async (endpoint: string, payload: any = {}, forceRefresh = false) => {
+const fetchFromProxy = async <TResponse = unknown>(
+  endpoint: string,
+  payload: PesuPayload = {},
+  forceRefresh = false,
+): Promise<TResponse> => {
   const cacheKey = `pesu_cache_${endpoint}_${JSON.stringify(payload)}`;
   
   if (!forceRefresh) {
     const cached = localStorage.getItem(cacheKey);
     if (cached) {
-      return JSON.parse(cached);
+      return JSON.parse(cached) as TResponse;
     }
   }
 
   if (inflightRequests[cacheKey] !== undefined) {
-    return inflightRequests[cacheKey];
+    return inflightRequests[cacheKey] as Promise<TResponse>;
   }
 
   const creds = getRawCredentials();
   
   const promise = apiClient.post(`/pesu/${endpoint}`, { 
-    username: "inferred-by-backend", // we updated backend pesu.py to use current_user.srn
     password: creds.password,
     ...payload
   }).then(response => {
     localStorage.setItem(cacheKey, JSON.stringify(response.data));
     delete inflightRequests[cacheKey];
-    return response.data;
+    return response.data as TResponse;
   }).catch(err => {
     delete inflightRequests[cacheKey];
     throw err;
@@ -51,26 +82,26 @@ const fetchFromProxy = async (endpoint: string, payload: any = {}, forceRefresh 
 };
 
 export const pesuApi = {
-  getAttendance: (forceRefresh?: boolean) => fetchFromProxy('attendance', {}, forceRefresh),
-  getTimetable: (forceRefresh?: boolean) => fetchFromProxy('timetable', {}, forceRefresh),
-  getIsa: async (batchClassId?: any, classBatchSectionId?: any, forceRefresh?: boolean) => {
-    const payload: any = {};
-    const bId = parseInt(batchClassId);
-    const sId = parseInt(classBatchSectionId);
+  getAttendance: (forceRefresh?: boolean) => fetchFromProxy<PesuProxyResponse>('attendance', {}, forceRefresh),
+  getTimetable: (forceRefresh?: boolean) => fetchFromProxy<PesuProxyResponse>('timetable', {}, forceRefresh),
+  getIsa: async (batchClassId?: string | number, classBatchSectionId?: string | number, forceRefresh?: boolean) => {
+    const payload: PesuPayload = {};
+    const bId = Number.parseInt(String(batchClassId ?? ''), 10);
+    const sId = Number.parseInt(String(classBatchSectionId ?? ''), 10);
     if (!isNaN(bId)) payload.batchClassId = bId;
     if (!isNaN(sId)) payload.classBatchSectionId = sId;
     
-    const response = await fetchFromProxy('isa', payload, forceRefresh);
+    const response = await fetchFromProxy<IsaResponse>('isa', payload, forceRefresh);
     
     // Double-cache the initial response under its explicit ID
     if (Object.keys(payload).length === 0 && response && response.selected_batch_id) {
-      const explicitPayload: any = {};
-      const explicitBId = parseInt(response.selected_batch_id);
+      const explicitPayload: PesuPayload = {};
+      const explicitBId = Number.parseInt(String(response.selected_batch_id), 10);
       if (!isNaN(explicitBId)) explicitPayload.batchClassId = explicitBId;
       
-      const match = response.semesters?.find((s: any) => parseInt(s.id) === explicitBId);
+      const match = response.semesters?.find((s) => Number.parseInt(String(s.id), 10) === explicitBId);
       if (match) {
-        const explicitSId = parseInt(match.section_id);
+        const explicitSId = Number.parseInt(String(match.section_id), 10);
         if (!isNaN(explicitSId)) explicitPayload.classBatchSectionId = explicitSId;
       }
       
@@ -84,20 +115,23 @@ export const pesuApi = {
   getProfile: (forceRefresh?: boolean) => fetchFromProxy('profile', {}, forceRefresh),
 };
 
-export const getAcademicStatus = (isaResponse: any, userSemesterStr?: string): string | null => {
+export const getAcademicStatus = (isaResponse: IsaResponse | null | undefined, userSemesterStr?: string): string | null => {
   if (!isaResponse || !isaResponse.success || !isaResponse.marks) return null;
   let isEsaOut = !!isaResponse.actual_sgpa && isaResponse.actual_sgpa !== 'N/A';
   let isIsa2Out = false;
   
   if (!isEsaOut) {
-    if (isaResponse.marks.some((m: any) => m.actual_grade)) {
+    if (isaResponse.marks.some((m) => m.actual_grade)) {
       isEsaOut = true;
     }
   }
   
-  isaResponse.marks.forEach((sub: any) => {
-    const isa2 = sub.components?.find((c: any) => c.name.includes("ISA 2") || c.name.includes("ISA-2") || c.name.includes("ISA2"));
-    if (isa2 && isa2.marks > 0) {
+  isaResponse.marks.forEach((sub) => {
+    const isa2 = sub.components?.find((c) => {
+      const name = c.name ?? '';
+      return name.includes("ISA 2") || name.includes("ISA-2") || name.includes("ISA2");
+    });
+    if (isa2 && Number(isa2.marks ?? 0) > 0) {
       isIsa2Out = true;
     }
   });

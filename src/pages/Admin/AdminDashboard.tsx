@@ -1,6 +1,7 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 import React, { useEffect, useState } from 'react';
 import { apiClient } from '../../api/client';
-import { ShieldAlert, Users, LayoutDashboard, Shield, ArrowLeft } from 'lucide-react';
+import { ShieldAlert, Users, LayoutDashboard, Shield, ArrowLeft, GraduationCap, Sparkles } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 
@@ -16,8 +17,9 @@ const AdminDashboard = () => {
     try {
       const statsRes = await apiClient.get('/admin/stats');
       setStats(statsRes.data);
-    } catch (err: any) {
-      if (err.response?.status === 403) {
+    } catch (err: unknown) {
+      const status = (err as { response?: { status?: number } }).response?.status;
+      if (status === 403) {
         setError('Access Denied. You do not have admin privileges.');
       } else {
         setError('Failed to fetch admin data.');
@@ -136,6 +138,25 @@ const AdminDashboard = () => {
           </div>
           <div className="relative z-10 flex items-center text-secondary text-sm font-bold mt-8 opacity-0 group-hover:opacity-100 transition-opacity -translate-x-4 group-hover:translate-x-0 transform duration-300 uppercase tracking-widest">
             Access Vault <ArrowLeft className="w-4 h-4 ml-2 rotate-180" />
+          </div>
+        </div>
+
+        <div
+          onClick={() => navigate('/admin/yearbook')}
+          className="bg-surface/40 backdrop-blur-md border border-white/5 hover:border-warning/50 rounded-3xl p-8 shadow-lg cursor-pointer transition-all duration-300 group hover:-translate-y-1 relative overflow-hidden flex flex-col justify-between min-h-[240px]"
+        >
+          <div className="absolute top-0 right-0 w-48 h-48 bg-warning/10 rounded-full blur-[80px] group-hover:bg-warning/20 transition-colors pointer-events-none"></div>
+          <div className="absolute bottom-0 left-0 w-32 h-32 bg-primary/10 rounded-full blur-[70px] pointer-events-none"></div>
+          <div className="relative z-10">
+            <div className="flex items-center gap-2 text-warning text-sm font-bold uppercase tracking-wider mb-3">
+              <GraduationCap className="w-5 h-5" />
+              Yearbook Queue
+            </div>
+            <h3 className="text-3xl font-black text-white mb-2">Review Memories</h3>
+            <p className="text-text-muted">Approve senior quotes, photos, and social links before they go live on the public yearbook.</p>
+          </div>
+          <div className="relative z-10 flex items-center text-warning text-sm font-bold mt-8 opacity-0 group-hover:opacity-100 transition-opacity -translate-x-4 group-hover:translate-x-0 transform duration-300 uppercase tracking-widest">
+            Curate Wall <Sparkles className="w-4 h-4 ml-2" />
           </div>
         </div>
       </div>
