@@ -6,6 +6,7 @@ import { Layout } from './components/layout/Layout';
 import { ProtectedRoute } from './components/layout/ProtectedRoute';
 import { AuthProvider, useAuth } from './hooks/useAuth';
 import { GlobalSyncWidget } from './components/GlobalSyncWidget';
+import Maintenance from './pages/Maintenance';
 
 const AdminClubs = React.lazy(() => import('./pages/Admin/AdminClubs'));
 const AdminDashboard = React.lazy(() => import('./pages/Admin/AdminDashboard'));
@@ -160,24 +161,7 @@ const Login = () => {
               </span>
             </button>
 
-            {/* Developer Links */}
-            <div className="mt-10 pt-8 border-t border-white/[0.08]">
-              <div className="text-[10px] font-bold text-text-muted uppercase tracking-widest mb-4 text-center">Open Source Ecosystem</div>
-              <div className="flex items-center justify-center gap-4 text-xs font-medium text-white/60 mb-6">
-                <a href="https://github.com/jois-code/sangama-front" target="_blank" rel="noreferrer" className="flex items-center gap-2 hover:text-white transition-colors hover:scale-105 transform duration-200 bg-white/5 px-4 py-2 rounded-xl border border-white/10 hover:border-white/30 hover:bg-white/10">
-                  <Code className="w-4 h-4" /> Frontend
-                </a>
-                <a href="https://github.com/jois-code/sangama-back" target="_blank" rel="noreferrer" className="flex items-center gap-2 hover:text-white transition-colors hover:scale-105 transform duration-200 bg-white/5 px-4 py-2 rounded-xl border border-white/10 hover:border-white/30 hover:bg-white/10">
-                  <Server className="w-4 h-4" /> Backend
-                </a>
-              </div>
-              <div className="flex justify-center">
-                <a href="https://discord.com/users/achyuthjoism" target="_blank" rel="noreferrer" className="inline-flex items-center justify-center gap-2 text-[11px] font-semibold text-text-muted hover:text-primary transition-colors bg-white/5 hover:bg-primary/10 border border-white/10 hover:border-primary/30 px-4 py-2 rounded-xl group/discord">
-                  <MessageSquare className="w-3.5 h-3.5 group-hover/discord:animate-pulse" />
-                  <span>Developer Support: <span className="text-white group-hover/discord:text-primary">achyuthjoism</span></span>
-                </a>
-              </div>
-            </div>
+
           </div>
         </div>
       </div>
@@ -187,51 +171,7 @@ const Login = () => {
 
 
 function App() {
-  return (
-    <AuthProvider>
-      <BrowserRouter>
-        <GlobalSyncWidget />
-        <React.Suspense fallback={<PageLoader />}>
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="/yearbook" element={<YearbookList />} />
-
-            <Route element={<ProtectedRoute />}>
-              <Route path="/birthday" element={<BirthdayList />} />
-              <Route path="/onboarding" element={<OnboardingWizard />} />
-              <Route path="/" element={<Layout />}>
-                <Route index element={<Dashboard />} />
-                <Route path="clubs" element={<ClubList />} />
-                <Route path="clubs/:id/dashboard" element={<ClubDashboard />} />
-                <Route path="clubs/:id/forms" element={<ManageForms />} />
-                <Route path="clubs/:id/events" element={<ManageEvents />} />
-                <Route path="events" element={<EventList />} />
-                <Route path="events/:eventId" element={<EventDetail />} />
-                <Route path="capstone/*" element={<ComingSoon />} />
-                <Route path="notes" element={<NotesDashboard />} />
-                <Route path="notes/:courseId" element={<CourseDetails />} />
-                <Route path="search" element={<ComingSoon />} />
-                <Route path="discover" element={<Discover />} />
-                <Route path="my-team" element={<MyTeam />} />
-                <Route path="academics/*" element={<AcademicsDashboard />} />
-                <Route path="profile" element={<UserProfile />} />
-                <Route path="profile/:id" element={<PublicProfile />} />
-                <Route path="profile/edit" element={<EditProfile />} />
-                <Route path="admin" element={<AdminDashboard />} />
-                <Route path="admin/users" element={<AdminUsers />} />
-                <Route path="admin/clubs" element={<AdminClubs />} />
-                <Route path="admin/yearbook" element={<AdminYearbook />} />
-                <Route path="forms/:formId/builder" element={<FormBuilder />} />
-                <Route path="forms/:formId/view" element={<FormViewer />} />
-                <Route path="forms/:formId/responses" element={<FormResponses />} />
-                <Route path="yearbook/submit" element={<YearbookSubmit />} />
-              </Route>
-            </Route>
-          </Routes>
-        </React.Suspense>
-      </BrowserRouter>
-    </AuthProvider>
-  );
+  return <Maintenance />;
 }
 
 export default App;
